@@ -11,5 +11,5 @@ public class Cart {
     private Long id;
     private Long userId;
     private String date;
-    private List<Product> product;
+    private List<Product> products;
 }
