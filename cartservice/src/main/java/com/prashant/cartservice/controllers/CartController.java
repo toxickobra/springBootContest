@@ -1,59 +1,111 @@
-package com.prashant.cartservice.controllers;
+package com.prashant.cartservice.services;
 
+import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import com.prashant.cartservice.dtos.FakeStoreCartDto;
 import com.prashant.cartservice.models.Cart;
-import com.prashant.cartservice.services.CartService;
-
-
-
-@RestController
-public class CartController {
-    private CartService cartService;
-
-    CartController(CartService cartService) {
-        this.cartService = cartService;
-    }
-
-    @GetMapping("/carts")
+@Service
+public class FakeStoreCartService implements CartService{
+    private RestTemplate restTemplate = new RestTemplate();
     public List<Cart> getAllCarts() {
-        return cartService.getAllCarts();
+        FakeStoreCartDto[] cartDtos = restTemplate.getForObject("https://fakestoreapi.com/carts", FakeStoreCartDto[].class);
+        Cart[] carts = new Cart[cartDtos.length];
+        for (int i = 0; i < cartDtos.length; i++) {
+            carts[i] = new Cart();
+            carts[i].setId(cartDtos[i].getId());
+            carts[i].setUserId(cartDtos[i].getUserId());
+            carts[i].setDate(cartDtos[i].getDate());
+            carts[i].setProduct(cartDtos[i].getProducts());
+
+        }
+        return Arrays.asList(carts);
     }
-    @GetMapping("/carts/{id}")
-    public Cart getSingleCart(@PathVariable Long id) {
-        return cartService.getCartById(id);
+    public Cart getCartById(Long id) {
+        FakeStoreCartDto cartDto = restTemplate.getForObject("https://fakestoreapi.com/carts/"+id, FakeStoreCartDto.class);
+        Cart cart = new Cart();
+        cart.setId(cartDto.getId());
+        cart.setUserId(cartDto.getUserId());
+        cart.setDate(cartDto.getDate());
+        cart.setProduct(cartDto.getProducts());
+        return cart;
     }
-    @GetMapping("/carts?startDate={startDate}&endDate={endDate}")
-    public List<Cart> getCartInDataRange(@PathVariable String startDate, @PathVariable String endDate) {
-        return cartService.getCartInDataRange(startDate, endDate);
+    public Cart addCart(Cart cart) {
+        FakeStoreCartDto cartDto = restTemplate.postForObject("https://fakestoreapi.com/carts", cart, FakeStoreCartDto.class);
+        Cart newCart = new Cart();
+        newCart.setId(cartDto.getId());
+        newCart.setUserId(cartDto.getUserId());
+        newCart.setDate(cartDto.getDate());
+        newCart.setProduct(cartDto.getProducts());
+        return newCart;
     }
-    @GetMapping("carts/user/{userId}")
-    public Cart getCartByUserId(@PathVariable Long userId) {
-        return cartService.getCartByUserId(userId);
+
+public Cart updateCart(Long id, Cart cart) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    HttpEntity<Cart> requestEntity = new HttpEntity<>(cart, headers);
+
+    ResponseEntity<FakeStoreCartDto> responseEntity = restTemplate.exchange(
+        "http://fakestoreapi.com/carts/" + id,
+        HttpMethod.PATCH,
+        requestEntity,
+        FakeStoreCartDto.class
+    );
+
+    FakeStoreCartDto cartDto = responseEntity.getBody();
+
+    Cart updatedCart = new Cart();
+    updatedCart.setId(cartDto.getId());
+    updatedCart.setUserId(cartDto.getUserId());
+    updatedCart.setDate(cartDto.getDate());
+    updatedCart.setProduct(cartDto.getProducts());
+
+    return updatedCart;
+}
+    public Cart replaceCart(Long id, Cart cart) {
+        restTemplate.put("https://fakestoreapi.com/carts/" + id, cart);
+    
+        FakeStoreCartDto cartDto = restTemplate.getForObject("https://fakestoreapi.com/carts/" + id, FakeStoreCartDto.class);
+    
+        Cart replacedCart = new Cart();
+        replacedCart.setId(cartDto.getId());
+        replacedCart.setUserId(cartDto.getUserId());
+        replacedCart.setDate(cartDto.getDate());
+        replacedCart.setProduct(cartDto.getProducts());
+    
+        return replacedCart;
     }
-    @PostMapping("/carts")
-    public Cart addCart(@RequestBody Cart cart) {
-        return cartService.addCart(cart);
+    public void deleteCart(Long id) {
+        restTemplate.delete("https://fakestoreapi.com/carts/"+id);
     }
-    @PatchMapping("/carts/{id}")
-    public Cart updateCart(@PathVariable Long id, @RequestBody Cart cart) {
-        return cartService.updateCart(id, cart);
+    public List<Cart> getCartInDataRange(String startDate, String endDate) {
+        FakeStoreCartDto[] cartDtos = restTemplate.getForObject("https://fakestoreapi.com/carts?startDate="+startDate+"&endDate="+endDate, FakeStoreCartDto[].class);
+        Cart[] carts = new Cart[cartDtos.length];
+        for (int i = 0; i < cartDtos.length; i++) {
+            carts[i] = new Cart();
+            carts[i].setId(cartDtos[i].getId());
+            carts[i].setUserId(cartDtos[i].getUserId());
+            carts[i].setDate(cartDtos[i].getDate());
+            carts[i].setProduct(cartDtos[i].getProducts());
+
+        }
+        return Arrays.asList(carts);
     }
-    @PutMapping("/carts/{id}")
-    public Cart replaceCart(@PathVariable Long id, @RequestBody Cart cart) {
-        return cartService.updateCart(id, cart);
-    }
-    @DeleteMapping("/carts/{id}")
-    public void deleteCart(@PathVariable Long id) {
-        cartService.deleteCart(id);
+    public Cart getCartByUserId(Long userId) {
+        FakeStoreCartDto cartDto = restTemplate.getForObject("https://fakestoreapi.com/carts/user/"+userId, FakeStoreCartDto.class);
+        Cart cart = new Cart();
+        cart.setId(cartDto.getId());
+        cart.setUserId(cartDto.getUserId());
+        cart.setDate(cartDto.getDate());
+        cart.setProduct(cartDto.getProducts());
+        return cart;
     }
 }
