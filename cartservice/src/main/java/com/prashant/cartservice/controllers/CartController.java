@@ -1,95 +1,60 @@
-package com.prashant.cartservice.services;
+package com.prashant.cartservice.controllers;
 
-import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.prashant.cartservice.dtos.FakeStoreCartDto;
 import com.prashant.cartservice.models.Cart;
-@Service
-public class FakeStoreCartService implements CartService{
-    private RestTemplate restTemplate = new RestTemplate();
+import com.prashant.cartservice.services.CartService;
+
+
+
+@RestController
+public class CartController {
+    private CartService cartService;
+
+    CartController(CartService cartService) {
+        this.cartService = cartService;
+    }
+
+    @GetMapping("/carts")
     public List<Cart> getAllCarts() {
-        FakeStoreCartDto[] cartDtos = restTemplate.getForObject("https://fakestoreapi.com/carts", FakeStoreCartDto[].class);
-        Cart[] carts = new Cart[cartDtos.length];
-        for (int i = 0; i < cartDtos.length; i++) {
-            carts[i] = new Cart();
-            carts[i].setId(cartDtos[i].getId());
-            carts[i].setUserId(cartDtos[i].getUserId());
-            carts[i].setDate(cartDtos[i].getDate());
-            carts[i].setProducts(cartDtos[i].getProducts());
-
-        }
-        return Arrays.asList(carts);
+        return cartService.getAllCarts();
     }
-    public Cart getCartById(Long id) {
-        FakeStoreCartDto cartDto = restTemplate.getForObject("https://fakestoreapi.com/carts/"+id, FakeStoreCartDto.class);
-        Cart cart = new Cart();
-        cart.setId(cartDto.getId());
-        cart.setUserId(cartDto.getUserId());
-        cart.setDate(cartDto.getDate());
-        cart.setProducts(cartDto.getProducts());
-        return cart;
+    @GetMapping("/carts/{id}")
+    public Cart getSingleCart(@PathVariable Long id) {
+        System.out.println("entered");
+        return cartService.getCartById(id);
     }
-    public Cart addCart(Cart cart) {
-        FakeStoreCartDto cartDto = restTemplate.postForObject("https://fakestoreapi.com/carts", cart, FakeStoreCartDto.class);
-        System.out.println(cartDto.getProducts());
-        Cart newCart = new Cart();
-        newCart.setId(cartDto.getId());
-        newCart.setUserId(cartDto.getUserId());
-        newCart.setDate(cartDto.getDate());
-        newCart.setProducts(cartDto.getProducts());
-        return newCart;
+    @GetMapping("/carts?startDate={startDate}&endDate={endDate}")
+    public List<Cart> getCartInDataRange(@PathVariable String startDate, @PathVariable String endDate) {
+        return cartService.getCartInDataRange(startDate, endDate);
     }
-
-public Cart updateCart(Long id, Cart cart) {
-    FakeStoreCartDto cartDto = restTemplate.patchForObject("https://fakestoreapi.com/carts/" + id, cart, FakeStoreCartDto.class);
-        System.out.println(cartDto.getProducts());
-        Cart newCart = new Cart();
-        newCart.setId(cartDto.getId());
-        newCart.setUserId(cartDto.getUserId());
-        newCart.setDate(cartDto.getDate());
-        newCart.setProducts(cartDto.getProducts());
-        return newCart;
-}
-    public Cart replaceCart(Long id, Cart cart) {
-        restTemplate.put("https://fakestoreapi.com/carts/" + id, cart,FakeStoreCartDto.class);
-    
-        FakeStoreCartDto cartDto = restTemplate.getForObject("https://fakestoreapi.com/carts/" + id, FakeStoreCartDto.class);
-    
-        Cart replacedCart = new Cart();
-        replacedCart.setId(cartDto.getId());
-        replacedCart.setUserId(cartDto.getUserId());
-        replacedCart.setDate(cartDto.getDate());
-        replacedCart.setProducts(cartDto.getProducts());
-    
-        return replacedCart;
+    @GetMapping("carts/user/{userId}")
+    public Cart getCartByUserId(@PathVariable Long userId) {
+        return cartService.getCartByUserId(userId);
     }
-    public void deleteCart(Long id) {
-        restTemplate.delete("https://fakestoreapi.com/carts/"+id);
+    @PostMapping("/carts")
+    public Cart addCart(@RequestBody Cart cart) {
+        return cartService.addCart(cart);
     }
-    public List<Cart> getCartInDataRange(String startDate, String endDate) {
-        FakeStoreCartDto[] cartDtos = restTemplate.getForObject("https://fakestoreapi.com/carts?startDate="+startDate+"&endDate="+endDate, FakeStoreCartDto[].class);
-        Cart[] carts = new Cart[cartDtos.length];
-        for (int i = 0; i < cartDtos.length; i++) {
-            carts[i] = new Cart();
-            carts[i].setId(cartDtos[i].getId());
-            carts[i].setUserId(cartDtos[i].getUserId());
-            carts[i].setDate(cartDtos[i].getDate());
-            carts[i].setProducts(cartDtos[i].getProducts());
-
-        }
-        return Arrays.asList(carts);
+    @PatchMapping("/carts/{id}")
+    public Cart updateCart(@PathVariable Long id, @RequestBody Cart cart) {
+        return cartService.updateCart(id, cart);
     }
-    public Cart getCartByUserId(Long userId) {
-        FakeStoreCartDto cartDto = restTemplate.getForObject("https://fakestoreapi.com/carts/user/"+userId, FakeStoreCartDto.class);
-        Cart cart = new Cart();
-        cart.setId(cartDto.getId());
-        cart.setUserId(cartDto.getUserId());
-        cart.setDate(cartDto.getDate());
-        cart.setProducts(cartDto.getProducts());
-        return cart;
+    @PutMapping("/carts/{id}")
+    public Cart replaceCart(@PathVariable Long id, @RequestBody Cart cart) {
+        return cartService.replaceCart(id, cart);
+    }
+    @DeleteMapping("/carts/{id}")
+    public void deleteCart(@PathVariable Long id) {
+        cartService.deleteCart(id);
     }
 }
