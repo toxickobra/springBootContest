@@ -3,11 +3,6 @@ package com.prashant.cartservice.services;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,7 +19,7 @@ public class FakeStoreCartService implements CartService{
             carts[i].setId(cartDtos[i].getId());
             carts[i].setUserId(cartDtos[i].getUserId());
             carts[i].setDate(cartDtos[i].getDate());
-            carts[i].setProduct(cartDtos[i].getProducts());
+            carts[i].setProducts(cartDtos[i].getProducts());
 
         }
         return Arrays.asList(carts);
@@ -35,43 +30,32 @@ public class FakeStoreCartService implements CartService{
         cart.setId(cartDto.getId());
         cart.setUserId(cartDto.getUserId());
         cart.setDate(cartDto.getDate());
-        cart.setProduct(cartDto.getProducts());
+        cart.setProducts(cartDto.getProducts());
         return cart;
     }
     public Cart addCart(Cart cart) {
         FakeStoreCartDto cartDto = restTemplate.postForObject("https://fakestoreapi.com/carts", cart, FakeStoreCartDto.class);
+        System.out.println(cartDto.getProducts());
         Cart newCart = new Cart();
         newCart.setId(cartDto.getId());
         newCart.setUserId(cartDto.getUserId());
         newCart.setDate(cartDto.getDate());
-        newCart.setProduct(cartDto.getProducts());
+        newCart.setProducts(cartDto.getProducts());
         return newCart;
     }
 
 public Cart updateCart(Long id, Cart cart) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    HttpEntity<Cart> requestEntity = new HttpEntity<>(cart, headers);
-
-    ResponseEntity<FakeStoreCartDto> responseEntity = restTemplate.exchange(
-        "http://fakestoreapi.com/carts/" + id,
-        HttpMethod.PATCH,
-        requestEntity,
-        FakeStoreCartDto.class
-    );
-
-    FakeStoreCartDto cartDto = responseEntity.getBody();
-
-    Cart updatedCart = new Cart();
-    updatedCart.setId(cartDto.getId());
-    updatedCart.setUserId(cartDto.getUserId());
-    updatedCart.setDate(cartDto.getDate());
-    updatedCart.setProduct(cartDto.getProducts());
-
-    return updatedCart;
+    FakeStoreCartDto cartDto = restTemplate.patchForObject("https://fakestoreapi.com/carts/" + id, cart, FakeStoreCartDto.class);
+        System.out.println(cartDto.getProducts());
+        Cart newCart = new Cart();
+        newCart.setId(cartDto.getId());
+        newCart.setUserId(cartDto.getUserId());
+        newCart.setDate(cartDto.getDate());
+        newCart.setProducts(cartDto.getProducts());
+        return newCart;
 }
     public Cart replaceCart(Long id, Cart cart) {
-        restTemplate.put("https://fakestoreapi.com/carts/" + id, cart);
+        restTemplate.put("https://fakestoreapi.com/carts/" + id, cart,FakeStoreCartDto.class);
     
         FakeStoreCartDto cartDto = restTemplate.getForObject("https://fakestoreapi.com/carts/" + id, FakeStoreCartDto.class);
     
@@ -79,7 +63,7 @@ public Cart updateCart(Long id, Cart cart) {
         replacedCart.setId(cartDto.getId());
         replacedCart.setUserId(cartDto.getUserId());
         replacedCart.setDate(cartDto.getDate());
-        replacedCart.setProduct(cartDto.getProducts());
+        replacedCart.setProducts(cartDto.getProducts());
     
         return replacedCart;
     }
@@ -94,7 +78,7 @@ public Cart updateCart(Long id, Cart cart) {
             carts[i].setId(cartDtos[i].getId());
             carts[i].setUserId(cartDtos[i].getUserId());
             carts[i].setDate(cartDtos[i].getDate());
-            carts[i].setProduct(cartDtos[i].getProducts());
+            carts[i].setProducts(cartDtos[i].getProducts());
 
         }
         return Arrays.asList(carts);
@@ -105,7 +89,7 @@ public Cart updateCart(Long id, Cart cart) {
         cart.setId(cartDto.getId());
         cart.setUserId(cartDto.getUserId());
         cart.setDate(cartDto.getDate());
-        cart.setProduct(cartDto.getProducts());
+        cart.setProducts(cartDto.getProducts());
         return cart;
     }
 }
